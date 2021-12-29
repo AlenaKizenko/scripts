@@ -1,0 +1,121 @@
+---
+title: "Aging experiment of *Hydra oligactis*"
+output:
+  html_document:
+    code_folding: hide
+
+---
+
+```{r, message=FALSE, warning=FALSE}
+#Loading libraries and function
+library(genefilter)
+library(DESeq2)
+library(ggplot2)
+library(RColorBrewer)
+library(pheatmap)
+library(tximport)
+library(DRIMSeq)
+library(dplyr)
+library(ggfortify)
+```
+
+```{r, message=FALSE, warning=FALSE}
+counts_agerev = read.delim2('/Users/alenakizenko/Documents/PhD/project/hydra_oligactis/revertants/agerev_output.txt',
+                     header = F, sep = ' ')
+rownames(counts_agerev) = counts_agerev[,1]
+counts_agerev = counts_agerev[, -c(1,8)]
+colnames(counts_agerev) = c('age1', 'age2', 'age3', 'rev1', 'rev2', 'rev3')
+ann = data.frame('ID' = colnames(counts_agerev),
+                 'Condition' = c('age', 'age', 'age', 'rev', 'rev', 'rev'))
+ann$Condition = as.factor(ann$Condition)
+
+TE_df = DESeqDataSetFromMatrix(countData = counts_agerev,
+                            colData = ann,
+                            design = ~Condition)
+
+TE = DESeq(TE_df, betaPrior=TRUE)
+```
+
+### Differential expression summary of transposable elements
+```{r}
+res <- DESeq2::results(TE)
+summary(res)
+```
+
+### PCA of transposable elements
+
+```{r, message=FALSE, warning=FALSE}
+vsdata <- varianceStabilizingTransformation(TE_df, blind=FALSE)
+plotPCA(vsdata, intgroup="Condition") +
+  geom_text(aes(label = name), vjust = 1, size = 3)
+```
+
+### PCA of genes
+
+```{r, message=FALSE, warning=FALSE}
+cond_df = data.frame(sample_id = c('age1', 'age2', 'age3',
+                                   'rev1', 'rev2', 'rev3'),
+                     condition = c(1,1,1,2,2,2))
+cond_df$condition = as.factor(cond_df$condition)
+files <- file.path("/Users/alenakizenko/Documents/PhD/project/hydra_oligactis/revertants/salmon", cond_df$sample_id, "quant.sf")
+names(files) <- cond_df$sample_id
+txi <- tximport(files, type="salmon", txOut=TRUE,
+                  countsFromAbundance="scaledTPM")
+ddsRxi = DESeqDataSetFromTximport(txi, colData = cond_df, design = ~condition)
+
+vsdRxi <- vst(ddsRxi, blind=FALSE)
+plotPCA(vsdRxi, intgroup="condition") +
+  geom_text(aes(label = name), vjust = 1, size = 3)
+```
+
+
+### Heatmap of the 20 most expressed transposon families
+
+```{r, message=FALSE, warning=FALSE}
+ntd <- normTransform(TE)
+select <- order(rowMeans(counts(TE,normalized=TRUE)),
+                decreasing=TRUE)[1:20]
+df <- data.frame(Condition = colData(TE)[,'Condition'])
+pheatmap(assay(vsdata)[select,], cluster_rows=TRUE, show_rownames=TRUE, cluster_cols = TRUE,
+         show_colnames = TRUE,
+         cellwidth = 12, cellheight = 12, angle_col = 45,
+         color = colorRampPalette(c(brewer.pal(9, name = "Set1")[2],
+                                    'white',
+                                    brewer.pal(9, name = "Set1")[1]))(50),
+         fontsize = 10, fontsize_row = 10, fontsize_col = 10,
+         clustering_distance_rows = "manhattan"
+)
+```
+
+### Volcano plot of transposable element families
+
+```{r, message=FALSE, warning=FALSE}
+res_df = as.data.frame(res)
+res_df = na.omit(res_df)
+res_df$id = rownames(res_df)
+
+ggplot(res_df, aes(x=log2FoldChange, y=-log10(padj),
+                                 color = ifelse(res_df$padj > 0.05, 'Not significant',
+                                               ifelse(abs(res_df$log2FoldChange) > 0.2, ifelse(res_df$log2FoldChange > 0.2, 'Upregulated', 'Downregulated'), 'Not significant')),
+                                 label = ifelse(abs(res_df$log2FoldChange) > 0.2 & res_df$padj < 0.05, res_df$id, '')
+                                 )
+                     ) +
+  geom_point(alpha = 0.8) +
+  geom_text(size = 3, vjust = 1.5, hjust = 0.5) +
+  geom_vline(xintercept = -0.2, color = 'gray55', linetype = 'dashed') +
+  geom_vline(xintercept = 0.2, color = 'gray55', linetype = 'dashed') +
+  geom_hline(yintercept = -log10(0.05), color = 'gray55', linetype = 'dashed') +
+  xlab("log2FoldChange") +
+  ylab("-log10(p-value adjusted)") +
+  scale_x_continuous(breaks = c(-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6), limits = c(-0.6, 0.6)) +
+  theme_bw() +
+  theme(axis.text.x = element_text(size=16, color = "black"),
+        axis.text.y = element_text(size=16, color = "black"),
+        axis.title.y = element_text(size=16, color = "black"),
+        axis.title.x = element_text(size=16, color = "black")
+  ) +
+  scale_color_manual(values = c(brewer.pal(11, 'RdYlBu')[10], brewer.pal(8, 'Dark2')[8], brewer.pal(11, 'RdYlBu')[1]),
+                     name = '')
+
+```
+

@@ -1,0 +1,564 @@
+---
+title: "Comparison of *Hydra viridissima* and *Hydra vulgaris* genomes"
+output:
+  html_document:
+    code_folding: hide
+
+---
+
+```{r, message=FALSE, warning=FALSE}
+#Loading libraries and function
+library(ggplot2)
+library(circlize)
+library(RColorBrewer)
+library(viridis)
+library(plyr)
+library(reshape2)
+library(tidyr)
+library(ggsignif)
+library(gg.gap)
+library(cowplot)
+library(tidyverse)
+library(cowplot)
+library(pafr)
+library(dplyr)
+```
+
+### Comparison of *Hydra vulgaris* chromosomes and *Hydra viridissima* contigs
+
+*Hydra viridissima* contigs were aligned to all *Hydra vulgaris* chromosomes. Purple-colored block is *Hydra vulgaris* Chromosome, green-colored blocks are *Hydra viridissima* contigs.
+
+```{r, message=FALSE}
+filenames <- list.files("/Users/alenakizenko/Documents/PhD/project/green_brown_comparison", pattern="*.paf", full.names=TRUE)
+res <- lapply(filenames, function(x) {read.delim2(x, header = F)})
+names(res) <- sapply(filenames, function(x) {strsplit(x, split = '/', fixed = T)[[1]][8]})
+
+plot_circos = function(df) {
+  df = res[[df]]
+  df$Quality = paste(df$V12, df$V13, df$V14,
+                        df$V15, df$V16, df$V17, sep = '')
+  df = df[, -c(12,13,14,15,16,17)]
+  hvir = df[, c(1,3,4)]
+  colnames(hvir) = c('chr', 'start', 'end')
+  hvul = df[, c(6,8,9)]
+  colnames(hvul) = c('chr', 'start', 'end')
+  df_plot = data.frame('chr' = c(unique(df$V1),unique(df$V6)),
+                      'start' = rep(0, length(c(unique(df$V1),unique(df$V6)))),
+                      'end' = c(unique(df$V2),unique(df$V7)))
+  circos.genomicInitialize(df_plot, plotType = c('axis'))
+  circos.genomicLink(hvir, hvul, col = brewer.pal(8, 'Dark2')[8])
+  highlight.chromosome(unique(hvul$chr), 
+                        track.index = 1, col = NA,
+                        border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome(unique(hvir$chr), 
+                        track.index = 1, col = NA,
+                        border = brewer.pal(3, 'Dark2')[1], lwd = 2)
+  df_plot$species = sapply(df_plot$chr, function(x) {ifelse(grepl(pattern = 'Scaffold*.', x = x,        ignore.case = F, fixed = F), 'hvul', 'hvir')})
+  df_plot$species = as.factor(df_plot$species)
+  
+  hvir_only = df_plot[!grepl('Scaffold*.', df_plot$chr, ignore.case = F, fixed = F),]
+  plot_length = ggplot(hvir_only, aes(end)) +
+    geom_histogram(position = 'dodge', fill = brewer.pal(6, 'Dark2')[1],
+                   color = 'gray7') +
+    theme_bw() +
+    theme(
+      axis.text.y = element_text(size=14, color = "black"),
+      axis.text.x = element_text(size=14, color = "black"),
+      axis.title = element_text(size = 14, color = "black"),
+      legend.position = 'none',
+      panel.grid = element_blank()
+    ) +
+    ylab(label = 'Counts') +
+    xlab(label = 'Contig length, bp') +
+    #scale_y_continuous(limits = c(0, 60000000), breaks = seq(0, 50000000, by = 10000000)) +
+    scale_fill_manual(values = c(brewer.pal(3, 'Dark2')[1], brewer.pal(3, 'Dark2')[3])) +
+    ggtitle(label = 'Distribution of Hydra viridissima contigs length')
+  
+  hvir$align = hvir$end - hvir$start
+  align_length = ggplot(hvir, aes(align)) +
+  geom_histogram(position = 'dodge', fill = brewer.pal(6, 'Dark2')[6], color = 'gray7') +
+  theme_bw() +
+  theme(
+      axis.text.y = element_text(size=14, color = "black"),
+      axis.text.x = element_text(size=14, color = "black", angle = 45, hjust = 0.5, vjust = 0.5),
+      axis.title = element_text(size = 14, color = "black"),
+      legend.position = 'none',
+      panel.grid = element_blank()
+    ) +
+    ylab(label = 'Counts') +
+    xlab(label = 'Alignment length, bp') +
+    ggtitle('Distribution of alignment lengths')
+
+  plot_grid(plot_length, align_length, nrow = 2)
+}
+```
+
+### *Hydra vulgaris* Chromosome 1
+
+```{r, message=FALSE}
+plot_circos(2)
+```
+
+### *Hydra vulgaris* Chromosome 2
+
+```{r, message=FALSE}
+plot_circos(3)
+```
+
+### *Hydra vulgaris* Chromosome 3
+
+```{r, message=FALSE}
+plot_circos(4)
+```
+
+### *Hydra vulgaris* Chromosome 4
+
+```{r, message=FALSE}
+plot_circos(5)
+```
+
+### *Hydra vulgaris* Chromosome 5
+
+```{r, message=FALSE}
+plot_circos(6)
+```
+
+### *Hydra vulgaris* Chromosome 6
+
+```{r, message=FALSE}
+plot_circos(7)
+```
+
+### *Hydra vulgaris* Chromosome 7
+
+```{r, message=FALSE}
+plot_circos(8)
+```
+
+### *Hydra vulgaris* Chromosome 8
+
+```{r, message=FALSE}
+plot_circos(9)
+```
+
+### *Hydra vulgaris* Chromosome 9
+
+```{r, message=FALSE}
+plot_circos(10)
+```
+
+### *Hydra vulgaris* Chromosome 10
+
+```{r, message=FALSE}
+plot_circos(11)
+```
+
+### *Hydra vulgaris* Chromosome 11
+
+```{r, message=FALSE}
+plot_circos(12)
+```
+
+### *Hydra vulgaris* Chromosome 12
+
+```{r, message=FALSE}
+plot_circos(13)
+```
+
+### *Hydra vulgaris* Chromosome 13
+
+```{r, message=FALSE}
+plot_circos(14)
+```
+
+### *Hydra vulgaris* Chromosome 14
+
+```{r, message=FALSE}
+plot_circos(15)
+```
+
+### *Hydra vulgaris* Chromosome 15
+
+```{r, message=FALSE}
+plot_circos(16)
+```
+
+
+### Comparison of *Hydra vulgaris* and *Hydra viridissima* scaffolds
+
+Three largest *Hydra viridissima* contigs were aligned to *Hydra vulgaris* scaffolds (= chromosomes). Purple-colored blocks are *Hydra vulgaris* chromosomes, green-colored blocks are *Hydra viridissima* contigs.
+
+```{r}
+scaffold  = read.delim2("/Users/alenakizenko/Documents/PhD/project/green_brown_comparison/hvul_hvir_align_3.paf",
+                        header = F)
+scaffold$Quality = paste(scaffold$V12, scaffold$V13, scaffold$V14,
+                        scaffold$V15, scaffold$V16, scaffold$V17, scaffold$V18, sep = '')
+scaffold = scaffold[, -c(12,13,14,15,16,17)]
+scaffold = subset(scaffold, V6 != 'Sc4wPfr_3517.1')
+hvir = scaffold[, c(1,3,4)]
+colnames(hvir) = c('chr', 'start', 'end')
+hvul = scaffold[, c(6,8,9)]
+colnames(hvul) = c('chr', 'start', 'end')
+
+df_plot = data.frame('chr' = c(unique(scaffold$V1),unique(scaffold$V6)),
+                     'start' = rep(0, length(c(unique(scaffold$V1),unique(scaffold$V6)))),
+                     'end' = c(unique(scaffold$V2),unique(scaffold$V7)))
+circos.genomicInitialize(df_plot, plotType = c('axis', 'labels'))
+circos.genomicLink(hvir, hvul,
+                   #col = brewer.pal(8, 'Dark2')[8]
+                   col = rand_color(nrow(hvir)))
+highlight.chromosome("Scaffold8", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+highlight.chromosome("Scaffold5", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+highlight.chromosome("Scaffold15", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+highlight.chromosome("Scaffold1", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+highlight.chromosome("Scaffold10", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold6", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold14", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold11", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold4", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold7", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold12", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold2", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold3", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold13", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome("Scaffold9", 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[3], lwd = 2)
+  highlight.chromosome(unique(hvir$chr)[1], 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[1], lwd = 2)
+  highlight.chromosome(unique(hvir$chr)[2], 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[1], lwd = 2)
+  highlight.chromosome(unique(hvir$chr)[3], 
+                      track.index = 1, col = NA,
+                      border = brewer.pal(3, 'Dark2')[1], lwd = 2)
+  text(-1.3, -0.001, "Hydra vulgaris", cex = 0.7)
+  text(1.35, 0.001, "Hydra viridissima", cex = 0.7)
+```
+
+The interesting things is that three *Hydra viridissima* largest contigs have matches with same *Hydra vulgaris* chromosomes (listed below).
+
+```{r}
+unique(hvul$chr)
+```
+
+### Distribution of alignment lengths in *Hydra vulgaris* Chromosome 1 vs *Hydra vulgaris* Chromosome 2 mapping
+
+```{r}
+ali_chr1_chr2 <- read_paf("/Users/alenakizenko/Documents/PhD/project/green_brown_comparison/Sc1_Sc2_hvul_align.paf")
+ali_chr1_chr2_naomit = ali_chr1_chr2[!is.na(ali_chr1_chr2$cg),]
+ggplot(ali_chr1_chr2_naomit, aes(alen)) + 
+  geom_histogram(colour="black", fill="steelblue", bins=20, alpha = .8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Alignment length")
+```
+
+### Synteny plot of *Hydra vulgaris* Chromosome 1 vs *Hydra vulgaris* Chromosome 2 mapping (only alignments > 4000 bp were used)
+
+```{r}
+ali_chr1_chr2_naomit$qname = rep('Chromosome 2', length(ali_chr1_chr2_naomit$qname))
+ali_chr1_chr2_naomit$tname = rep('Chromosome 1', length(ali_chr1_chr2_naomit$tname))
+
+long_ali_chr1_chr2 <- subset(ali_chr1_chr2_naomit, alen > 4e3)
+
+plot_synteny(long_ali_chr1_chr2, q_chrom="Chromosome 2", t_chrom="Chromosome 1", centre=TRUE) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 18, color = 'black'),
+        axis.title = element_text(size = 18, color = 'black')
+  )
+```
+
+### Percent identity of long alignment hits Chromosome 1 vs Chromosome 2
+
+```{r}
+long_ali_chr1_chr2$perc_ident = (long_ali_chr1_chr2$nmatch/long_ali_chr1_chr2$alen)*100
+ggplot(long_ali_chr1_chr2, aes(perc_ident)) + 
+  geom_histogram(colour="black", fill="red4", bins=20, alpha = 0.8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Percent identity")
+```
+
+### Distribution of alignment lengths in *Hydra vulgaris* Chromosome 1 vs *Hydra vulgaris* Chromosome 3 mapping
+
+```{r}
+ali_chr1_chr3 <- read_paf("/Users/alenakizenko/Documents/PhD/project/green_brown_comparison/Sc1_Sc3_hvul_align.paf")
+ali_chr1_chr3_naomit = ali_chr1_chr3[!is.na(ali_chr1_chr3$cg),]
+ggplot(ali_chr1_chr3_naomit, aes(alen)) + 
+  geom_histogram(colour="black", fill="steelblue", bins=20, alpha = .8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Alignment length")
+```
+
+### Synteny plot of *Hydra vulgaris* Chromosome 1 vs *Hydra vulgaris* Chromosome 3 mapping (only alignments > 4000 bp were used)
+
+```{r}
+ali_chr1_chr3_naomit$qname = rep('Chromosome 3', length(ali_chr1_chr3_naomit$qname))
+ali_chr1_chr3_naomit$tname = rep('Chromosome 1', length(ali_chr1_chr3_naomit$tname))
+
+long_ali_chr1_chr3 <- subset(ali_chr1_chr3_naomit, alen > 4e3)
+
+plot_synteny(long_ali_chr1_chr3, q_chrom="Chromosome 3", t_chrom="Chromosome 1", centre=TRUE) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 18, color = 'black'),
+        axis.title = element_text(size = 18, color = 'black')
+  )
+```
+
+### Percent identity of long alignment hits Chromosome 1 vs Chromosome 3
+
+```{r}
+long_ali_chr1_chr3$perc_ident = (long_ali_chr1_chr3$nmatch/long_ali_chr1_chr3$alen)*100
+ggplot(long_ali_chr1_chr3, aes(perc_ident)) + 
+  geom_histogram(colour="black", fill="red4", bins=20, alpha = 0.8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Percent identity")
+```
+
+### Distribution of alignment lengths in *Hydra vulgaris* Chromosome 2 vs *Hydra vulgaris* Chromosome 4 mapping
+
+```{r}
+ali_chr2_chr4 <- read_paf("/Users/alenakizenko/Documents/PhD/project/green_brown_comparison/Sc2_Sc4_hvul_align.paf")
+ali_chr2_chr4_naomit = ali_chr2_chr4[!is.na(ali_chr2_chr4$cg),]
+ggplot(ali_chr2_chr4_naomit, aes(alen)) + 
+  geom_histogram(colour="black", fill="steelblue", bins=20, alpha = .8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Alignment length")
+```
+
+### Synteny plot of *Hydra vulgaris* Chromosome 2 vs *Hydra vulgaris* Chromosome 4 mapping (only alignments > 4000 bp were used)
+
+```{r}
+ali_chr2_chr4_naomit$qname = rep('Chromosome 4', length(ali_chr2_chr4_naomit$qname))
+ali_chr2_chr4_naomit$tname = rep('Chromosome 2', length(ali_chr2_chr4_naomit$tname))
+
+long_ali_chr2_chr4 <- subset(ali_chr2_chr4_naomit, alen > 4e3)
+
+plot_synteny(long_ali_chr2_chr4, q_chrom="Chromosome 4", t_chrom="Chromosome 2", centre=TRUE) +
+  theme_bw() +
+  theme(axis.text = element_text(size = 18, color = 'black'),
+        axis.title = element_text(size = 18, color = 'black')
+  )
+```
+
+### Percent identity of long alignment hits Chromosome 2 vs Chromosome 4
+
+```{r}
+long_ali_chr2_chr4$perc_ident = (long_ali_chr2_chr4$nmatch/long_ali_chr2_chr4$alen)*100
+ggplot(long_ali_chr2_chr4, aes(perc_ident)) + 
+  geom_histogram(colour="black", fill="red4", bins=20, alpha = 0.8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Percent identity")
+```
+
+
+### Gene number in *Hydra viridissima* and *Hydra vulgaris* genomes
+
+AUGUSTUS gene annotations were used to count the gene number in both genomes.
+
+```{r, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+hvir_ann = read.delim2('/Users/alenakizenko/Documents/PhD/project/hydra_viridissima/hvir_r06.all.recounted.gff', header = F)
+hvul_ann = read.delim2('/Users/alenakizenko/Documents/PhD/project/hydra_vulgaris_chrom/data_files/hydra2.0_genemodels.gff3', header = F)
+hvir_genes = subset(hvir_ann, V3 == 'gene')
+hvul_genes = subset(hvul_ann, V3 == 'gene')
+df_gene_num = data.frame('Species' = c('Hydra vulgaris', 'Hydra viridissima'),
+                         'Gene_number' = c(length(hvul_genes$V1), length(hvir_genes$V1)))
+df_gene_num$Gene_number = as.numeric(df_gene_num$Gene_number)
+plot_genes = ggplot(data=df_gene_num, aes(reorder(Species, -Gene_number), Gene_number, fill=Species))+
+  geom_bar(stat="identity", position="dodge", width = 0.5, color = 'black', alpha = 0.8) +
+  scale_fill_manual(values = c(brewer.pal(3, 'Dark2')[1], brewer.pal(3, 'Dark2')[3]), name = 'Gene number') +
+  theme_bw() +
+  theme(
+        axis.text.y = element_text(size=14,color = "black"),
+        axis.text.x = element_text(size=14,color = "black", face = 'italic'),
+        axis.title = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 14),
+        panel.grid = element_blank()
+    
+  )
+plot_genes
+```
+
+It seems like *Hydra vulgaris* has a larger number of genes, than *Hydra viridissima*. But it also can be due to the computational annotation mistakes.
+
+### Gene length in *Hydra viridissima* and *Hydra vulgaris* genomes
+
+AUGUSTUS gene annotations were used to assess the gene length distribution in both genomes. Then I tested whether gene length of *Hydra viridissima* genes is less, than gene length of *Hydra vulgaris* genes.
+
+```{r, message=FALSE, warning=FALSE}
+
+hvir_genes$Gene_length = hvir_genes$V5 - hvir_genes$V4
+hvul_genes$Gene_length = hvul_genes$V5 - hvul_genes$V4
+df_gene_length = data.frame('Species' = c(rep('Hydra vulgaris', length(hvul_genes$V1)),
+                                          rep('Hydra viridissima', length(hvir_genes$V1))),
+                            'Gene_length' = c(hvul_genes$Gene_length, hvir_genes$Gene_length 
+                                          ))
+
+
+plot_genes_length = ggplot(data=df_gene_length, aes(Species, Gene_length, fill=Species))+
+  geom_boxplot(width = 0.5, color = 'black', alpha = 0.8) +
+  scale_fill_manual(values = c(brewer.pal(3, 'Dark2')[1], brewer.pal(3, 'Dark2')[3]), name = 'Gene length') +
+  theme_bw() +
+  theme(
+        axis.text.y = element_text(size=14,color = "black"),
+        axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+        legend.position = 'none',
+        panel.grid = element_blank()
+    
+  )  +
+  geom_signif(comparisons = list(c("Hydra viridissima", "Hydra vulgaris")),
+    map_signif_level = TRUE, test = 't.test', test.args = list(alternative = "less")) +
+  xlab('') +
+  ylab('') +
+  stat_summary(fun.y=mean, geom="point",
+               shape=15, size=2,
+               color='red4', fill='red4')
+
+plot_genes_length2 = gg.gap(plot = plot_genes_length,
+       ylim = c(0,350000),
+       segments = c(30000, 100000),
+       tick_width = c(5000,100000))
+
+genes_hist = ggplot(df_gene_length, aes(Gene_length, fill = Species)) +
+  geom_histogram(position = 'dodge') +
+  theme_bw() +
+  theme(
+        axis.text.y = element_text(size=14, color = "black"),
+        axis.text.x = element_text(size=14, color = "black", angle = 45, hjust = 0.5, vjust = 0.5),
+        axis.title = element_text(size = 14, color = "black"),
+        legend.position = 'none',
+        panel.grid = element_blank()
+        ) +
+  ylab(label = 'Number of genes') +
+  xlab(label = 'Gene length') +
+  scale_fill_manual(values = c(brewer.pal(3, 'Dark2')[1], brewer.pal(3, 'Dark2')[3]))
+plot_grid(plot_genes_length2, genes_hist)
+```
+
+It seems like mean *Hydra viridissima* gene length is shorter, than mean *Hydra vulgaris* gene length.
+
+### CDS length in *Hydra viridissima* and *Hydra vulgaris* genomes
+
+AUGUSTUS gene annotations were used to assess the CDS length distribution in both genomes. Then I tested whether CDS length of *Hydra viridissima* CDS is less, than CDS length of *Hydra vulgaris* CDS.
+
+```{r, message=FALSE, warning=FALSE}
+hvir_ann$CDS = str_extract(hvir_ann$V9, pattern = '(?<=Parent=).*')
+hvul_ann$CDS = str_extract(hvul_ann$V9, pattern = '(?<=Parent=).*')
+hvir_cds = subset(hvir_ann, V3 == 'CDS')
+hvul_cds = subset(hvul_ann, V3 == 'CDS')
+hvir_cds$Gene_length = hvir_cds$V5 - hvir_cds$V4
+hvul_cds$Gene_length = hvul_cds$V5 - hvul_cds$V4
+
+hvir_cds_only = aggregate(Gene_length ~ CDS, hvir_cds[, c(10,11)], FUN = sum)
+hvul_cds_only = aggregate(Gene_length ~ CDS, hvul_cds[, c(10,11)], FUN = sum)
+
+df_cds_length = data.frame('Species' = c(rep('Hydra vulgaris', length(hvul_cds_only$CDS)),
+                                          rep('Hydra viridissima', length(hvir_cds_only$CDS))),
+                            'Gene_length' = c(hvul_cds_only$Gene_length, hvir_cds_only$Gene_length 
+                                          ))
+
+plot_cds_length = ggplot(data=df_cds_length, aes(Species, Gene_length, fill=Species))+
+  geom_boxplot(width = 0.5, color = 'black', alpha = 0.8) +
+  scale_fill_manual(values = c(brewer.pal(3, 'Dark2')[1], brewer.pal(3, 'Dark2')[3]), name = 'CDS length') +
+  theme_bw() +
+  theme(
+        axis.text.y = element_text(size=14,color = "black"),
+        axis.text.x = element_blank(),
+        legend.position = 'none',
+        panel.grid = element_blank()
+    
+  )  +
+  geom_signif(comparisons = list(c("Hydra viridissima", "Hydra vulgaris")),
+    map_signif_level = TRUE, test = 't.test',test.args = list(alternative = "less")) +
+  ylab('') +
+  xlab('') +
+  stat_summary(fun.y=mean, geom="point",
+               shape=15, size=2,
+               color='red4', fill='red4', alpha = .8)
+
+plot_cds_length2 = gg.gap(plot = plot_cds_length,
+       ylim = c(0,50000),
+       segments = c(3000, 10000),
+       tick_width = c(1000,10000))
+
+cds_hist = ggplot(df_cds_length, aes(Gene_length, fill = Species)) +
+  geom_histogram(position = 'dodge') +
+  theme_bw() +
+  theme(
+        axis.text.y = element_text(size=14, color = "black"),
+        axis.text.x = element_text(size=14, color = "black", angle = 45, hjust = 0.5, vjust = 0.5),
+        axis.title = element_text(size = 14, color = "black"),
+        legend.position = 'none',
+        panel.grid = element_blank()
+        ) +
+  ylab(label = 'Number of CDS') +
+  xlab(label = 'CDS length') +
+  scale_fill_manual(values = c(brewer.pal(3, 'Dark2')[1], brewer.pal(3, 'Dark2')[3]))
+
+plot_grid(plot_cds_length2, cds_hist, rel_widths = c(1, 1), rel_heights = c(1, 1))
+```
+
+It seems like mean lengths of *Hydra vulgaris* is not longer than mean length of *Hydra viridissima* CDS. The interesting thing is when I tested if mean *Hydra vulgaris* CDS length is shorter, than mean *Hydra viridissima* CDS length, it was significant.
+
+```{r}
+t.test(x = subset(df_cds_length, Species == 'Hydra vulgaris')[,2], y = subset(df_cds_length, Species == 'Hydra viridissima')[,2], alternative = 'less')
+```
+
+```{r}
+dovetail  = read.delim2("/Users/alenakizenko/Documents/PhD/project/green_brown_comparison/hvul_dovelail_align.paf",
+                        header = F)
+
+dovetail_unique = dovetail[dovetail$V1 != dovetail$V6,]
+
+query = dovetail_unique[, c(1,3,4)]
+colnames(query) = c('chr', 'start', 'end')
+target = dovetail_unique[, c(6,8,9)]
+colnames(target) = c('chr', 'start', 'end')
+
+query_df = dovetail_unique[, c(1,2)]
+colnames(query_df) = c('chr', 'end')
+target_df = dovetail_unique[, c(6,7)]
+colnames(target_df) = c('chr', 'end')
+df_plot = rbind(query_df, target_df)
+df_plot = unique.data.frame(df_plot)
+df_plot$start = rep(0, length(df_plot$chr))
+df_plot = df_plot[, c(1,3,2)]
+
+dovetail_unique$perc_ident = (dovetail_unique$V10/dovetail_unique$V11)*100
+ggplot(dovetail_unique, aes(perc_ident)) + 
+  geom_histogram(colour="black", fill="red4", bins=20, alpha = 0.8) + 
+  theme_bw(base_size=16) +
+  scale_x_log10("Percent identity")
+```
+
